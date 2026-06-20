@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "947715368922",
+    "project_id": "ujikom-alya",
+    "storage_bucket": "ujikom-alya.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:947715368922:android:5cc3d5621d6f638da702e3",
+        "android_client_info": {
+          "package_name": "com.ujikomalya.ujikom_alya"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBpWsNIdpEm8nLLLIkaSVg3P1zcbOVlm8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
