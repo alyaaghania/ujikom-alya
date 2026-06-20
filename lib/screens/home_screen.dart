@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'umkm_list_screen.dart';
 
-/// Halaman ini adalah halaman sementara/placeholder setelah login berhasil.
-/// Nanti halaman ini akan kita kembangkan menjadi halaman utama (dashboard)
-/// dengan menu Presensi, Data UMKM, Maps, dan Profile.
+/// Halaman ini adalah dashboard utama setelah login berhasil.
+/// Berisi menu navigasi ke fitur-fitur utama aplikasi.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -17,6 +17,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1565C0),
+        foregroundColor: Colors.white,
         title: const Text('SiUMKM BPS'),
         actions: [
           IconButton(
@@ -34,37 +35,144 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.green,
-              size: 64,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Login berhasil!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             Text(
-              'Selamat datang, ${user?.displayName ?? user?.email ?? "Pegawai"}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
+              'Selamat datang,',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
-            const SizedBox(height: 24),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                'Halaman ini akan dikembangkan menjadi dashboard utama '
-                '(Presensi, Data UMKM, Maps, dan Profile).',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.black38),
+            Text(
+              user?.displayName ?? user?.email ?? 'Pegawai',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1565C0),
               ),
             ),
+            const SizedBox(height: 24),
+            const Text(
+              'Menu Utama',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+
+            // Kartu menu Data UMKM
+            _MenuCard(
+              icon: Icons.storefront_outlined,
+              title: 'Data UMKM',
+              subtitle: 'Kelola data hasil pendataan UMKM',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UmkmListScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Kartu menu lain yang akan dikembangkan nanti (placeholder)
+            _MenuCard(
+              icon: Icons.fingerprint,
+              title: 'Presensi',
+              subtitle: 'Segera hadir',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Fitur ini segera hadir')),
+                );
+              },
+              isDisabled: true,
+            ),
+            const SizedBox(height: 12),
+            _MenuCard(
+              icon: Icons.person_outline,
+              title: 'Profile',
+              subtitle: 'Segera hadir',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Fitur ini segera hadir')),
+                );
+              },
+              isDisabled: true,
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget kartu menu yang dapat dipakai ulang untuk setiap item di dashboard
+class _MenuCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool isDisabled;
+
+  const _MenuCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.isDisabled = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isDisabled
+                      ? Colors.grey.shade200
+                      : const Color(0xFF1565C0).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: isDisabled ? Colors.grey : const Color(0xFF1565C0),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isDisabled ? Colors.grey : Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDisabled ? Colors.grey : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right,
+                  color: isDisabled ? Colors.grey.shade300 : Colors.black26),
+            ],
+          ),
         ),
       ),
     );
