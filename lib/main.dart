@@ -13,7 +13,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Arahkan Firestore ke Emulator lokal (untuk development tanpa billing)
-  FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
+  FirebaseFirestore.instance.useFirestoreEmulator('192.168.0.117', 8080);
 
   runApp(const MyApp());
 }

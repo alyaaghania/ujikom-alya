@@ -1,10 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-/// Model ini merepresentasikan satu data UMKM.
-/// Dipakai untuk mengubah data dari Firestore (format Map)
-/// menjadi objek Dart yang mudah dipakai di UI, dan sebaliknya.
+/// Model ini merepresentasikan satu data UMKM untuk database SQLite.
 class UmkmModel {
-  final String? id; // id dokumen Firestore (null kalau belum disimpan)
+  final int? id; // id auto-increment dari SQLite (null kalau belum disimpan)
   final String namaUsaha;
   final String kategori;
   final double latitude;
@@ -22,7 +18,6 @@ class UmkmModel {
     this.createdAt,
   });
 
-  /// Mengubah objek ini menjadi Map, supaya bisa disimpan ke Firestore
   Map<String, dynamic> toMap() {
     return {
       'nama_usaha': namaUsaha,
@@ -30,21 +25,21 @@ class UmkmModel {
       'latitude': latitude,
       'longitude': longitude,
       'created_by': createdBy,
-      'created_at': createdAt ?? FieldValue.serverTimestamp(),
+      'created_at': (createdAt ?? DateTime.now()).toIso8601String(),
     };
   }
 
-  /// Membuat objek UmkmModel dari dokumen Firestore
-  factory UmkmModel.fromDocument(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory UmkmModel.fromMap(Map<String, dynamic> map) {
     return UmkmModel(
-      id: doc.id,
-      namaUsaha: data['nama_usaha'] ?? '',
-      kategori: data['kategori'] ?? '',
-      latitude: (data['latitude'] ?? 0).toDouble(),
-      longitude: (data['longitude'] ?? 0).toDouble(),
-      createdBy: data['created_by'] ?? '',
-      createdAt: (data['created_at'] as Timestamp?)?.toDate(),
+      id: map['id'] as int?,
+      namaUsaha: map['nama_usaha'] ?? '',
+      kategori: map['kategori'] ?? '',
+      latitude: (map['latitude'] ?? 0).toDouble(),
+      longitude: (map['longitude'] ?? 0).toDouble(),
+      createdBy: map['created_by'] ?? '',
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'])
+          : null,
     );
   }
 }

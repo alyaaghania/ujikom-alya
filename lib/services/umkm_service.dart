@@ -1,34 +1,30 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/umkm_model.dart';
+import 'database_helper.dart';
 
-/// Service ini menangani semua operasi CRUD (Create, Read, Update, Delete)
-/// untuk data UMKM yang tersimpan di Firestore collection 'umkm'.
+/// Service ini menangani semua operasi CRUD untuk data UMKM,
+/// tersimpan di database SQLite lokal (di HP/device itu sendiri).
+/// Tidak butuh internet, WiFi, atau server apapun.
 class UmkmService {
-  final CollectionReference _umkmCollection = FirebaseFirestore.instance
-      .collection('umkm');
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  /// READ: Mengambil semua data UMKM secara real-time (stream).
-  /// Diurutkan dari yang terbaru diinput.
-  Stream<List<UmkmModel>> getUmkmList() {
-    return _umkmCollection
-        .orderBy('created_at', descending: true)
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => UmkmModel.fromDocument(doc)).toList());
-  }
-
-  /// CREATE: Menambahkan data UMKM baru
   Future<void> addUmkm(UmkmModel umkm) async {
-    await _umkmCollection.add(umkm.toMap());
+    final db = await _dbHelper.database;
+    await db.insert('umkm', umkm.toMap());
   }
 
-  /// UPDATE: Mengubah data UMKM yang sudah ada (berdasarkan id dokumen)
-  Future<void> updateUmkm(String id, UmkmModel umkm) async {
-    await _umkmCollection.doc(id).update(umkm.toMap());
+  Future<List<UmkmModel>> getUmkmList() async {
+    final db = await _dbHelper.database;
+    final maps = await db.query('umkm', orderBy: 'id DESC');
+    return maps.map((map) => UmkmModel.fromMap(map)).toList();
   }
 
-  /// DELETE: Menghapus data UMKM berdasarkan id dokumen
-  Future<void> deleteUmkm(String id) async {
-    await _umkmCollection.doc(id).delete();
+  Future<void> updateUmkm(int id, UmkmModel umkm) async {
+    final db = await _dbHelper.database;
+    await db.update('umkm', umkm.toMap(), where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteUmkm(int id) async {
+    final db = await _dbHelper.database;
+    await db.delete('umkm', where: 'id = ?', whereArgs: [id]);
   }
 }

@@ -120,9 +120,11 @@ class _UmkmFormScreenState extends State<UmkmFormScreen> {
               _isEditMode ? 'Data berhasil diperbarui!' : 'Data berhasil disimpan!',
             ),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
           ),
         );
-        Navigator.pop(context);
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
