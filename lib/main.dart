@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 
@@ -13,7 +13,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Arahkan Firestore ke Emulator lokal (untuk development tanpa billing)
-  FirebaseFirestore.instance.useFirestoreEmulator('192.168.0.117', 8080);
+  // FirebaseFirestore.instance.useFirestoreEmulator('192.168.0.117', 8080);
 
   runApp(const MyApp());
 }

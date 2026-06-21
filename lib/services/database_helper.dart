@@ -1,9 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-/// Helper untuk membuka/membuat database SQLite.
-/// Database ini tersimpan LANGSUNG di file system HP/device,
-/// tidak butuh internet, WiFi, atau server apapun.
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
   static Database? _database;
@@ -22,8 +19,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -39,5 +37,33 @@ class DatabaseHelper {
         created_at TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE presensi (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_pegawai TEXT NOT NULL,
+        tanggal TEXT NOT NULL,
+        jam_masuk TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        alamat TEXT
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE presensi (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nama_pegawai TEXT NOT NULL,
+          tanggal TEXT NOT NULL,
+          jam_masuk TEXT NOT NULL,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          alamat TEXT
+        )
+      ''');
+    }
   }
 }

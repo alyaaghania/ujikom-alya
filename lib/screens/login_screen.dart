@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import 'homeadmin_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -37,11 +40,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!mounted) return;
-    setState(() => _isLoading = false);
 
     if (error != null) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // Cek role user di Firestore
+    final uid = _authService.currentUser?.uid ?? '';
+    final role = await _userService.getRole(uid);
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (role == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeAdminScreen()),
       );
     } else {
       Navigator.pushReplacement(

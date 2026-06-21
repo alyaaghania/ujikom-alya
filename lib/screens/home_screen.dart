@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'umkm_list_screen.dart';
+import 'presensi_screen.dart';
+import 'profile_screen.dart';
 
-/// Halaman ini adalah dashboard utama setelah login berhasil.
-/// Berisi menu navigasi ke fitur-fitur utama aplikasi.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final AuthService authService = AuthService();
+
+  @override
   Widget build(BuildContext context) {
-    final AuthService authService = AuthService();
     final user = authService.currentUser;
 
     return Scaffold(
@@ -45,7 +51,7 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             Text(
-              user?.displayName ?? user?.email ?? 'Pegawai',
+              (user?.displayName ?? user?.email ?? 'Pegawai').split(' ').first,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -59,7 +65,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Kartu menu Data UMKM
+            // Kartu Data UMKM
             _MenuCard(
               icon: Icons.storefront_outlined,
               title: 'Data UMKM',
@@ -73,29 +79,37 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Kartu menu lain yang akan dikembangkan nanti (placeholder)
+            // Kartu Presensi
             _MenuCard(
               icon: Icons.fingerprint,
               title: 'Presensi',
-              subtitle: 'Segera hadir',
+              subtitle: 'Catat kehadiran dengan lokasi GPS',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Fitur ini segera hadir')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PresensiScreen(
+                      namaPegawai: user?.displayName ?? user?.email ?? 'Pegawai',
+                    ),
+                  ),
                 );
               },
-              isDisabled: true,
             ),
             const SizedBox(height: 12),
+
+            // Kartu Profile
             _MenuCard(
               icon: Icons.person_outline,
               title: 'Profile',
-              subtitle: 'Segera hadir',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Fitur ini segera hadir')),
+              subtitle: 'Lihat dan edit informasi akun',
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
                 );
+                await authService.currentUser?.reload();
+                if (mounted) setState(() {});
               },
-              isDisabled: true,
             ),
           ],
         ),
@@ -104,7 +118,6 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// Widget kartu menu yang dapat dipakai ulang untuk setiap item di dashboard
 class _MenuCard extends StatelessWidget {
   final IconData icon;
   final String title;

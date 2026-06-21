@@ -1,29 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'user_service.dart';
 
-/// Service ini bertugas menjadi "jembatan" antara UI (tampilan)
-/// dengan Firebase Authentication.
-/// Semua logic login, register, dan logout dikumpulkan di sini
-/// supaya kode di halaman (screen) tetap rapi dan fokus ke tampilan saja.
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Mengembalikan user yang sedang login saat ini (null kalau belum login)
   User? get currentUser => _auth.currentUser;
 
-  /// Stream untuk memantau perubahan status login secara real-time.
-  /// Berguna nanti untuk menentukan apakah user diarahkan ke halaman
-  /// Login atau halaman Home.
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  /// Proses LOGIN menggunakan email & password.
-  /// Mengembalikan null jika berhasil, atau pesan error (String) jika gagal.
   Future<String?> login(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
-      return null; // null artinya tidak ada error, berhasil login
+      return null;
     } on FirebaseAuthException catch (e) {
       return _mapErrorMessage(e.code);
     } catch (e) {
@@ -31,17 +22,22 @@ class AuthService {
     }
   }
 
-  /// Proses REGISTER (membuat akun baru) menggunakan email & password.
-  /// Mengembalikan null jika berhasil, atau pesan error (String) jika gagal.
-  Future<String?> register(String email, String password, String nama) async {
+  Future<String?> register(String email, String password, String nama, String nip) async {
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
 
-      // Simpan nama pegawai sebagai "display name" di akun Firebase
       await credential.user?.updateDisplayName(nama.trim());
+
+      // Simpan data user ke Firestore
+      await UserService().simpanDataUser(
+        uid: credential.user!.uid,
+        nama: nama.trim(),
+        email: email.trim(),
+        nip: nip.trim(),
+      );
 
       return null;
     } on FirebaseAuthException catch (e) {
@@ -51,13 +47,55 @@ class AuthService {
     }
   }
 
-  /// Proses LOGOUT
   Future<void> logout() async {
     await _auth.signOut();
   }
 
-  /// Mengubah kode error teknis dari Firebase menjadi pesan
-  /// yang mudah dipahami pengguna (dalam Bahasa Indonesia).
+  Future<String?> updateNama(String namaBaru) async {
+    try {
+      await _auth.currentUser?.updateDisplayName(namaBaru.trim());
+      return null;
+    } catch (e) {
+      return 'Gagal mengubah nama: $e';
+    }
+  }
+
+  Future<String?> updatePassword(String passwordLama, String passwordBaru) async {
+    try {
+      final user = _auth.currentUser;
+      final email = user?.email ?? '';
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: passwordLama,
+      );
+      await user?.reauthenticateWithCredential(credential);
+      await user?.updatePassword(passwordBaru);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _mapErrorMessage(e.code);
+    } catch (e) {
+      return 'Gagal mengubah password: $e';
+    }
+  }
+
+  Future<String?> hapusAkun(String password) async {
+    try {
+      final user = _auth.currentUser;
+      final email = user?.email ?? '';
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await user?.reauthenticateWithCredential(credential);
+      await user?.delete();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _mapErrorMessage(e.code);
+    } catch (e) {
+      return 'Gagal menghapus akun: $e';
+    }
+  }
+
   String _mapErrorMessage(String code) {
     switch (code) {
       case 'invalid-email':
