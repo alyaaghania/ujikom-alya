@@ -1,20 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 
-void main() async {
-  // Wajib dipanggil sebelum runApp() ketika menggunakan plugin native (Firebase)
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Inisialisasi koneksi ke Firebase menggunakan konfigurasi
-  // yang sudah otomatis dibuat oleh flutterfire configure
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Arahkan Firestore ke Emulator lokal (untuk development tanpa billing)
-  // FirebaseFirestore.instance.useFirestoreEmulator('192.168.0.117', 8080);
-
+void main() {
   runApp(const MyApp());
 }
 

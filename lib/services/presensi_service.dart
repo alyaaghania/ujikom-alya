@@ -1,11 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/presensi_model.dart';
+import 'database_helper.dart';
+import 'auth_service.dart';
 
 class PresensiService {
-  final CollectionReference _presensiCollection =
-      FirebaseFirestore.instance.collection('presensi');
+  final DatabaseHelper _db = DatabaseHelper.instance;
 
   Future<Position> getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -31,42 +30,70 @@ class PresensiService {
   }
 
   Future<void> simpanPresensi(PresensiModel presensi) async {
-    await _presensiCollection.add(presensi.toMap());
+    final db = await _db.database;
+    await db.insert('presensi', presensi.toMap());
   }
 
-  /// Cek apakah pegawai yang sedang login SUDAH absen hari ini.
-  /// Mengembalikan data presensi hari ini jika sudah ada, atau null jika belum.
+  // Cek presensi hari ini berdasarkan nama pegawai
   Future<PresensiModel?> getPresensiHariIni() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final db = await _db.database;
+    final nama = AuthService().currentUser?['nama'] ?? '';
     final now = DateTime.now();
-    final tanggalHariIni =
+    final tanggal =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-    final snapshot = await _presensiCollection
-        .where('uid_pegawai', isEqualTo: uid)
-        .where('tanggal', isEqualTo: tanggalHariIni)
-        .limit(1)
-        .get();
+    final result = await db.query(
+      'presensi',
+      where: 'nama_pegawai = ? AND tanggal = ?',
+      whereArgs: [nama, tanggal],
+      limit: 1,
+    );
 
-    if (snapshot.docs.isEmpty) return null;
-    return PresensiModel.fromDocument(snapshot.docs.first);
+    if (result.isEmpty) return null;
+    return PresensiModel.fromMap(result.first);
   }
 
-  /// History presensi MILIK SENDIRI (untuk pegawai)
+  // Presensi milik sendiri
   Future<List<PresensiModel>> getPresensiSaya() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final snapshot = await _presensiCollection
-        .where('uid_pegawai', isEqualTo: uid)
-        .orderBy('created_at', descending: true)
-        .get();
-    return snapshot.docs.map((doc) => PresensiModel.fromDocument(doc)).toList();
+    final db = await _db.database;
+    final nama = AuthService().currentUser?['nama'] ?? '';
+    final result = await db.query(
+      'presensi',
+      where: 'nama_pegawai = ?',
+      whereArgs: [nama],
+      orderBy: 'id DESC',
+    );
+    return result.map((e) => PresensiModel.fromMap(e)).toList();
   }
 
-  /// SEMUA presensi dari SEMUA pegawai (khusus admin)
+  // Semua presensi (untuk admin)
   Future<List<PresensiModel>> getAllPresensi() async {
-    final snapshot = await _presensiCollection
-        .orderBy('created_at', descending: true)
-        .get();
-    return snapshot.docs.map((doc) => PresensiModel.fromDocument(doc)).toList();
+    final db = await _db.database;
+    final result = await db.query('presensi', orderBy: 'id DESC');
+    return result.map((e) => PresensiModel.fromMap(e)).toList();
+  }
+
+  Future<int> countPresensiHariIni() async {
+    final db = await _db.database;
+    final now = DateTime.now();
+    final tanggal = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final result = await db.rawQuery(
+      "SELECT COUNT(*) as count FROM presensi WHERE tanggal = ?",
+      [tanggal],
+    );
+    return (result.first['count'] as int?) ?? 0;
+  }
+
+  bool dalamJangkauanJember(double latitude, double longitude) {
+    const pusatLat = -8.1724;
+    const pusatLng = 113.7036;
+    const radiusKm = 15.0;
+
+    final jarak = Geolocator.distanceBetween(
+      pusatLat, pusatLng,
+      latitude, longitude,
+    );
+
+    return jarak <= radiusKm * 1000;
   }
 }

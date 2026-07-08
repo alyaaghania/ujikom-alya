@@ -19,13 +19,24 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        nip TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'pegawai'
+      )
+    ''');
+
     await db.execute('''
       CREATE TABLE umkm (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,6 +60,14 @@ class DatabaseHelper {
         alamat TEXT
       )
     ''');
+
+    await db.insert('users', {
+      'nama': 'Admin',
+      'email': 'admin@gmail.com',
+      'password': 'admin123',
+      'nip': '-',
+      'role': 'admin',
+    });
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -64,6 +83,38 @@ class DatabaseHelper {
           alamat TEXT
         )
       ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nama TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          nip TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'pegawai'
+        )
+      ''');
+
+      await db.insert('users', {
+        'nama': 'Admin',
+        'email': 'admin@gmail.com',
+        'password': 'admin123',
+        'nip': '-',
+        'role': 'admin',
+      });
+    }
+
+    if (oldVersion < 4) {
+      await db.update(
+        'users',
+        {
+          'email': 'admin@gmail.com',
+          'password': 'admin123',
+        },
+        where: 'role = ?',
+        whereArgs: ['admin'],
+      );
     }
   }
 }

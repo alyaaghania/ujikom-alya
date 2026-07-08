@@ -1,9 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class PresensiModel {
-  final String? id;
+  final int? id;
   final String namaPegawai;
-  final String uidPegawai;
   final String tanggal;
   final String jamMasuk;
   final double latitude;
@@ -13,7 +10,6 @@ class PresensiModel {
   PresensiModel({
     this.id,
     required this.namaPegawai,
-    required this.uidPegawai,
     required this.tanggal,
     required this.jamMasuk,
     required this.latitude,
@@ -24,27 +20,23 @@ class PresensiModel {
   Map<String, dynamic> toMap() {
     return {
       'nama_pegawai': namaPegawai,
-      'uid_pegawai': uidPegawai,
       'tanggal': tanggal,
       'jam_masuk': jamMasuk,
       'latitude': latitude,
       'longitude': longitude,
       'alamat': alamat,
-      'created_at': FieldValue.serverTimestamp(),
     };
   }
 
-  factory PresensiModel.fromDocument(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory PresensiModel.fromMap(Map<String, dynamic> map) {
     return PresensiModel(
-      id: doc.id,
-      namaPegawai: data['nama_pegawai'] ?? '',
-      uidPegawai: data['uid_pegawai'] ?? '',
-      tanggal: data['tanggal'] ?? '',
-      jamMasuk: data['jam_masuk'] ?? '',
-      latitude: (data['latitude'] ?? 0).toDouble(),
-      longitude: (data['longitude'] ?? 0).toDouble(),
-      alamat: data['alamat'],
+      id: map['id'],
+      namaPegawai: map['nama_pegawai'] ?? '',
+      tanggal: map['tanggal'] ?? '',
+      jamMasuk: map['jam_masuk'] ?? '',
+      latitude: (map['latitude'] ?? 0).toDouble(),
+      longitude: (map['longitude'] ?? 0).toDouble(),
+      alamat: map['alamat'],
     );
   }
 }
